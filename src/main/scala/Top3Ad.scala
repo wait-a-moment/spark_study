@@ -4,20 +4,20 @@ import org.apache.spark.{SparkConf, SparkContext}
 object Top3Ad {
   def main(args: Array[String]): Unit = {
     // 1. 创建 SparkConf对象, 并设置 App名字
-    val conf=new SparkConf().setAppName("WordCount").setMaster("local[*]")
+    val conf = new SparkConf().setAppName("WordCount").setMaster("local[*]")
     // 2. 创建SparkContext对象
-    val sc=new SparkContext(conf)
-    val line=sc.textFile("input/agent.log")
+    val sc = new SparkContext(conf)
+    val line = sc.textFile("input/agent.log")
     //4.计算每个省中每个广告被点击的总数：((Province,AD),sum)
-    val provinceAdToOne=line.map{x=>
-      val key=x.split(" ")
-      ((key(1),key(4)),1)
+    val provinceAdToOne = line.map { x =>
+      val key = x.split(" ")
+      ((key(1), key(4)), 1)
     }
     // 转化为（（省份，广告），次数）
-    val provinceAdToSum= provinceAdToOne.reduceByKey(_+_)
+    val provinceAdToSum = provinceAdToOne.reduceByKey(_ + _)
     // 将省份作为key,(广告，次数)作为value 再进行聚合(Province,List((AD1,sum1),(AD2,sum2)...))
-    val provinceGroup= provinceAdToSum.map(x=>
-      (x._1._1,(x._1._2,x._2))
+    val provinceGroup = provinceAdToSum.map(x =>
+      (x._1._1, (x._1._2, x._2))
     ).groupByKey()
     //对同一个省份所有广告的集合进行排序并取前3条，排序规则为广告点击总数
     val provinceAdTop3 = provinceGroup.mapValues { x =>
